@@ -2,54 +2,119 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Studium Countdown</title>
+  <title>Mein Studium Countdown</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       text-align: center;
-      background: linear-gradient(to right, #004aad, #007bff);
+      background: linear-gradient(to right, #003366, #007bff);
       color: white;
-      margin-top: 100px;
+      margin-top: 80px;
     }
-    h1 { font-size: 2.5em; margin-bottom: 0.5em; }
-    #timer { font-size: 2em; margin-top: 0.5em; }
-    #semester { font-size: 1.5em; margin-top: 1em; }
+    h1 { font-size: 2.2em; margin-bottom: 0.4em; }
+    #timer { font-size: 1.8em; margin-bottom: 1.2em; }
+    #semester { font-size: 1.4em; margin-bottom: 1em; }
+    #progress-container {
+      width: 80%;
+      max-width: 500px;
+      height: 25px;
+      background-color: #ffffff33;
+      margin: 20px auto;
+      border-radius: 20px;
+      overflow: hidden;
+    }
+    #progress-bar {
+      height: 100%;
+      width: 0%;
+      background-color: #00ffb3;
+      border-radius: 20px 0 0 20px;
+      transition: width 0.5s ease;
+    }
+    footer {
+      margin-top: 40px;
+      font-size: 0.9em;
+      color: #eee;
+      opacity: 0.8;
+    }
   </style>
 </head>
 <body>
-  <h1>Countdown bis Studienende</h1>
+  <h1>🎓 Countdown bis Studienende</h1>
   <div id="timer"></div>
   <div id="semester"></div>
 
+  <div id="progress-container">
+    <div id="progress-bar"></div>
+  </div>
+  <div id="progress-text"></div>
+
+  <footer>Stand: <span id="today"></span></footer>
+
   <script>
-    const startDate = new Date("2023-10-01");  // Studienbeginn
-    const endDate = new Date("2027-07-31");    // Studienende
-    const semesterLengthMonths = 6;            // 6 Monate pro Semester
+    // === Deine Studiendaten ===
+    const studyStart = new Date("2024-10-01");
+    const studyEnd   = new Date("2027-07-31");
+
+    // Semesterzeiten (fest definiert)
+    const semesters = [
+      { name: "Wintersemester", startMonth: 9, startDay: 1, endMonth: 1, endDay: 14 },
+      { name: "Sommersemester", startMonth: 2, startDay: 14, endMonth: 6, endDay: 31 }
+    ];
+
+    function getCurrentSemester(now) {
+      const year = now.getFullYear();
+      const winterStart = new Date(year, 9, 1);   // 1.10
+      const winterEnd   = new Date(year + 1, 1, 14); // 14.02
+      const summerStart = new Date(year, 2, 14);  // 14.03
+      const summerEnd   = new Date(year, 6, 31);  // 31.07
+
+      if (now >= winterStart && now <= winterEnd) return { name: "Wintersemester", start: winterStart, end: winterEnd };
+      if (now >= summerStart && now <= summerEnd) return { name: "Sommersemester", start: summerStart, end: summerEnd };
+
+      // falls zwischen den Semestern (Ferien)
+      if (now < summerStart) return { name: "Vorlesungsfreie Zeit (Feb–Mär)", start: winterEnd, end: summerStart };
+      return { name: "Vorlesungsfreie Zeit (Aug–Sep)", start: summerEnd, end: winterStart };
+    }
 
     function updateCountdown() {
       const now = new Date();
-      const diff = endDate - now;
+      const diff = studyEnd - now;
 
-      // Countdown
+      // Countdown berechnen
       const days = Math.floor(diff / (1000 * 60 * 60 * 24));
       const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
       const minutes = Math.floor((diff / (1000 * 60)) % 60);
       const seconds = Math.floor((diff / 1000) % 60);
+
       document.getElementById("timer").textContent =
         `${days} Tage, ${hours} Std, ${minutes} Min, ${seconds} Sek`;
 
-      // Semester-Berechnung
-      const monthsPassed = (now.getFullYear() - startDate.getFullYear()) * 12 +
-                           (now.getMonth() - startDate.getMonth());
-      const currentSemester = Math.floor(monthsPassed / semesterLengthMonths) + 1;
-      const semesterType = (now.getMonth() >= 9 || now.getMonth() <= 2)
-        ? "Wintersemester"
-        : "Sommersemester";
-      document.getElementById("semester").textContent =
-        `Aktuell: ${semesterType} ${currentSemester}. Semester`;
+      // Studienfortschritt
+      const totalDuration = studyEnd - studyStart;
+      const elapsed = now - studyStart;
+      const overallProgress = Math.min(Math.max(elapsed / totalDuration, 0), 1);
 
+      // Semesterberechnung
+      const monthsPassed = (now.getFullYear() - studyStart.getFullYear()) * 12 + (now.getMonth() - studyStart.getMonth());
+      const currentSemesterNumber = Math.floor(monthsPassed / 6) + 1;
+
+      // Aktuelles Semester bestimmen
+      const currentSem = getCurrentSemester(now);
+      const semProgress = Math.min(Math.max((now - currentSem.start) / (currentSem.end - currentSem.start), 0), 1);
+
+      // Ausgabe
+      document.getElementById("semester").textContent =
+        `${currentSem.name} — ${currentSemesterNumber}. Semester`;
+
+      const bar = document.getElementById("progress-bar");
+      const text = document.getElementById("progress-text");
+      bar.style.width = (semProgress * 100).toFixed(1) + "%";
+      text.textContent = `Semesterfortschritt: ${(semProgress * 100).toFixed(1)}% | Studienfortschritt: ${(overallProgress * 100).toFixed(1)}%`;
+
+      document.getElementById("today").textContent = now.toLocaleDateString("de-DE");
       requestAnimationFrame(updateCountdown);
     }
+
     updateCountdown();
   </script>
 </body>
