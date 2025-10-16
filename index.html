@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Studium Countdown</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: linear-gradient(to right, #004aad, #007bff);
+      color: white;
+      margin-top: 100px;
+    }
+    h1 { font-size: 2.5em; margin-bottom: 0.5em; }
+    #timer { font-size: 2em; margin-top: 0.5em; }
+    #semester { font-size: 1.5em; margin-top: 1em; }
+  </style>
+</head>
+<body>
+  <h1>Countdown bis Studienende</h1>
+  <div id="timer"></div>
+  <div id="semester"></div>
+
+  <script>
+    const startDate = new Date("2023-10-01");  // Studienbeginn
+    const endDate = new Date("2027-07-31");    // Studienende
+    const semesterLengthMonths = 6;            // 6 Monate pro Semester
+
+    function updateCountdown() {
+      const now = new Date();
+      const diff = endDate - now;
+
+      // Countdown
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((diff / (1000 * 60)) % 60);
+      const seconds = Math.floor((diff / 1000) % 60);
+      document.getElementById("timer").textContent =
+        `${days} Tage, ${hours} Std, ${minutes} Min, ${seconds} Sek`;
+
+      // Semester-Berechnung
+      const monthsPassed = (now.getFullYear() - startDate.getFullYear()) * 12 +
+                           (now.getMonth() - startDate.getMonth());
+      const currentSemester = Math.floor(monthsPassed / semesterLengthMonths) + 1;
+      const semesterType = (now.getMonth() >= 9 || now.getMonth() <= 2)
+        ? "Wintersemester"
+        : "Sommersemester";
+      document.getElementById("semester").textContent =
+        `Aktuell: ${semesterType} ${currentSemester}. Semester`;
+
+      requestAnimationFrame(updateCountdown);
+    }
+    updateCountdown();
+  </script>
+</body>
+</html>
