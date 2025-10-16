@@ -2,63 +2,86 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Studium Countdown – THWS Style</title>
+  <title>Studium Countdown – Dark Mode mit Prozenten</title>
   <style>
     body {
       font-family: "Segoe UI", Arial, sans-serif;
       text-align: center;
-      background: linear-gradient(135deg, #ff6600, #ff8800);
-      color: white;
+      background: radial-gradient(circle at top, #1b1c1f, #0d0e10);
+      color: #eaeaea;
       margin: 0;
       padding: 40px 10px;
     }
     h1 {
-      font-size: 2.4em;
-      margin-bottom: 0.3em;
+      font-size: 2.3em;
+      margin-bottom: 0.2em;
+      color: #ffa94d;
+    }
+    #progress-overall {
+      font-size: 1.1em;
+      color: #bfbfbf;
+      margin-bottom: 1.2em;
     }
     #timer {
-      font-size: 1.6em;
-      margin-bottom: 1em;
+      font-size: 1.5em;
+      margin-bottom: 0.5em;
+      color: #ffffff;
     }
     #semester-info {
       font-size: 1.3em;
       margin-bottom: 1.5em;
+      color: #b0b0b0;
     }
     .bar-container {
       width: 90%;
       max-width: 600px;
-      background-color: rgba(255, 255, 255, 0.25);
+      background-color: #2a2a2a;
       border-radius: 20px;
-      margin: 8px auto;
+      margin: 10px auto;
       overflow: hidden;
-      height: 25px;
+      height: 26px;
+      position: relative;
     }
     .bar {
       height: 100%;
-      background-color: #00ffcc;
+      background: linear-gradient(90deg, #0099ff, #00ffcc);
       border-radius: 20px 0 0 20px;
       transition: width 0.5s ease;
     }
-    .label {
-      margin-top: 4px;
-      font-weight: 600;
+    .bar-label {
+      position: absolute;
+      top: 2px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-weight: bold;
+      font-size: 0.9em;
       color: #fff;
+      text-shadow: 0 0 4px #000;
+    }
+    .label {
+      margin-top: 6px;
+      font-weight: 600;
+      color: #ffa94d;
     }
     footer {
       margin-top: 40px;
       font-size: 0.9em;
-      color: #fff;
+      color: #888;
       opacity: 0.8;
     }
   </style>
 </head>
 <body>
-  <h1>🎓 Countdown bis Studienende</h1>
+  <h1>🎓 Studium Countdown</h1>
+  <div id="progress-overall"></div>
   <div id="timer"></div>
   <div id="semester-info"></div>
 
   <div class="label">📘 Gesamtfortschritt Studium</div>
-  <div class="bar-container"><div id="bar-total" class="bar"></div></div>
+  <div class="bar-container">
+    <div id="bar-total" class="bar"></div>
+    <div id="bar-total-label" class="bar-label"></div>
+  </div>
 
   <div id="semester-bars"></div>
 
@@ -84,12 +107,20 @@
       const label = document.createElement("div");
       label.className = "label";
       label.textContent = `📗 ${sem.name}`;
+
       const barWrap = document.createElement("div");
       barWrap.className = "bar-container";
+
       const bar = document.createElement("div");
       bar.id = `bar-sem-${i}`;
       bar.className = "bar";
+
+      const text = document.createElement("div");
+      text.id = `bar-label-${i}`;
+      text.className = "bar-label";
+
       barWrap.appendChild(bar);
+      barWrap.appendChild(text);
       container.appendChild(label);
       container.appendChild(barWrap);
     });
@@ -106,30 +137,41 @@
       document.getElementById("timer").textContent =
         `${days} Tage, ${hours} Std, ${minutes} Min, ${seconds} Sek`;
 
+      // Gesamtfortschritt Studium
+      const totalProgress = ((now - studyStart) / (studyEnd - studyStart)) * 100;
+      const totalPercent = Math.min(Math.max(totalProgress, 0), 100).toFixed(1);
+      const totalBar = document.getElementById("bar-total");
+      const totalLabel = document.getElementById("bar-total-label");
+      totalBar.style.width = totalPercent + "%";
+      totalLabel.textContent = `${totalPercent}%`;
+
+      document.getElementById("progress-overall").textContent =
+        `Bereits ${totalPercent}% des Studiums geschafft`;
+
       // Semesterfortschritte
       let currentSemesterIndex = -1;
       semesters.forEach((sem, i) => {
         const bar = document.getElementById(`bar-sem-${i}`);
+        const text = document.getElementById(`bar-label-${i}`);
+        let progress = 0;
+
         if (now >= sem.end) {
-          bar.style.width = "100%";
-          bar.style.backgroundColor = "#00ff88";
+          progress = 100;
+          bar.style.background = "linear-gradient(90deg, #00cc66, #00ff99)";
         } else if (now >= sem.start && now <= sem.end) {
           currentSemesterIndex = i;
-          const progress = ((now - sem.start) / (sem.end - sem.start)) * 100;
-          bar.style.width = progress.toFixed(1) + "%";
-          bar.style.backgroundColor = "#00ccff";
+          progress = ((now - sem.start) / (sem.end - sem.start)) * 100;
+          bar.style.background = "linear-gradient(90deg, #0099ff, #00ffff)";
         } else {
-          bar.style.width = "0%";
-          bar.style.backgroundColor = "#ffffff55";
+          progress = 0;
+          bar.style.background = "#333";
         }
+
+        bar.style.width = progress.toFixed(1) + "%";
+        text.textContent = `${progress.toFixed(1)}%`;
       });
 
-      // Gesamtfortschritt
-      const totalProgress = ((now - studyStart) / (studyEnd - studyStart)) * 100;
-      const totalBar = document.getElementById("bar-total");
-      totalBar.style.width = Math.min(Math.max(totalProgress, 0), 100).toFixed(1) + "%";
-
-      // Info-Text
+      // Aktuelles Semester anzeigen
       const semText =
         currentSemesterIndex >= 0
           ? `${semesters[currentSemesterIndex].name.replace("📗 ", "")}`
@@ -137,8 +179,8 @@
           ? "Noch vor Studienbeginn"
           : "Studium abgeschlossen 🎉";
       document.getElementById("semester-info").textContent = semText;
-      document.getElementById("today").textContent = now.toLocaleDateString("de-DE");
 
+      document.getElementById("today").textContent = now.toLocaleDateString("de-DE");
       requestAnimationFrame(updateCountdown);
     }
 
