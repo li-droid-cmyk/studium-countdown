@@ -2,189 +2,316 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Studium Countdown – Dark Mode mit Prozenten</title>
+  <title>Mein Studium – Countdown & Fortschritt</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Social Preview -->
+  <meta property="og:title" content="Mein Studium-Countdown">
+  <meta property="og:description" content="Live: Semester- und Studienfortschritt, Resttage & Meilensteine.">
+  <meta property="og:type" content="website">
+  <!-- Optional: eigenes Vorschaubild per absoluter URL -->
+  <meta property="og:image" content="">
+  <meta name="twitter:card" content="summary_large_image">
+
   <style>
-    body {
-      font-family: "Segoe UI", Arial, sans-serif;
-      text-align: center;
-      background: radial-gradient(circle at top, #1b1c1f, #0d0e10);
-      color: #eaeaea;
-      margin: 0;
-      padding: 40px 10px;
+    :root{
+      --bg1:#1b1c1f; --bg2:#0d0e10; --text:#eaeaea; --muted:#b0b0b0; --muted2:#9aa;
+      --accent:#ffa94d; --barBg:#2a2a2a; --barDone1:#00cc66; --barDone2:#00ff99;
+      --barNow1:#0099ff; --barNow2:#00ffff; --barIdle:#333;
+      --card:#17181a; --border:#2b2c31;
     }
-    h1 {
-      font-size: 2.3em;
-      margin-bottom: 0.2em;
-      color: #ffa94d;
+    body.light{
+      --bg1:#f6f8fc; --bg2:#e9edf5; --text:#15171a; --muted:#444; --muted2:#5c6b7a;
+      --accent:#ff6a00; --barBg:#dde3ee; --barIdle:#c6cfdb; --card:#fff; --border:#dfe5ef;
     }
-    #progress-overall {
-      font-size: 1.1em;
-      color: #bfbfbf;
-      margin-bottom: 1.2em;
+
+    html,body{height:100%}
+    body{
+      margin:0; font-family: "Segoe UI", Roboto, Arial, sans-serif;
+      background: radial-gradient(1000px 500px at 50% 0%, var(--bg1), var(--bg2));
+      color:var(--text); -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+      padding: 28px 12px 46px;
     }
-    #timer {
-      font-size: 1.5em;
-      margin-bottom: 0.5em;
-      color: #ffffff;
+    .wrap{max-width: 860px; margin:0 auto}
+    h1{margin:.1em 0 .2em; font-size: clamp(1.6rem, 2.5vw, 2.4rem); color:var(--accent)}
+    #progress-overall{font-size:1.05em; color:var(--muted); margin:.2em 0 1em}
+    #timer{font-size: clamp(1.2rem, 2.2vw, 1.6rem); margin:.2em 0; color:#fff; font-variant-numeric: tabular-nums;}
+    #semester-info{font-size:1.15em; color:var(--muted); margin:0 0 1.2em}
+    #mini-stats{margin:10px 0 18px; font-size:1.02em; color:#cfcfcf}
+    body.light #timer{color:#000}
+
+    .toolbar{
+      display:flex; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap;
     }
-    #semester-info {
-      font-size: 1.3em;
-      margin-bottom: 1.5em;
-      color: #b0b0b0;
+    .btn{
+      padding:8px 12px; border-radius:12px; border:1px solid var(--border);
+      background:var(--card); color:var(--text); cursor:pointer;
     }
-    .bar-container {
-      width: 90%;
-      max-width: 600px;
-      background-color: #2a2a2a;
-      border-radius: 20px;
-      margin: 10px auto;
-      overflow: hidden;
-      height: 26px;
-      position: relative;
+    .card{
+      background:var(--card); border:1px solid var(--border);
+      border-radius:16px; padding:16px; margin: 16px 0;
     }
-    .bar {
-      height: 100%;
-      background: linear-gradient(90deg, #0099ff, #00ffcc);
-      border-radius: 20px 0 0 20px;
-      transition: width 0.5s ease;
+
+    .label{margin:8px 2px 6px; font-weight:700; color:var(--accent)}
+    .bar-container{
+      width:100%; background:var(--barBg); height:26px;
+      border-radius:20px; overflow:hidden; position:relative;
+      box-shadow: inset 0 0 6px rgba(255,255,255,.05);
     }
-    .bar-label {
-      position: absolute;
-      top: 2px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-weight: bold;
-      font-size: 0.9em;
-      color: #fff;
-      text-shadow: 0 0 4px #000;
+    .bar{
+      height:100%; width:0%;
+      background: linear-gradient(90deg, var(--barNow1), var(--barNow2));
+      border-radius:20px 0 0 20px; transition:width .5s ease;
     }
-    .label {
-      margin-top: 6px;
-      font-weight: 600;
-      color: #ffa94d;
+    .bar-label{
+      position:absolute; top:2px; left:50%; transform:translateX(-50%);
+      font-weight:800; font-size:.92em; color:#fff; text-shadow:0 0 4px #000;
+      font-variant-numeric: tabular-nums;
     }
-    footer {
-      margin-top: 40px;
-      font-size: 0.9em;
-      color: #888;
-      opacity: 0.8;
+    .row{display:grid; grid-template-columns: 1fr; gap:16px}
+    @media(min-width:760px){ .row{ grid-template-columns: 1fr 1fr } }
+
+    .timeline{ position:relative; height:10px; }
+    .timeline .dot{
+      position:absolute; top:-3px; width:8px; height:8px; border-radius:50%;
+      background:var(--accent); box-shadow:0 0 6px var(--accent);
     }
+    .legend{ font-size:.92em; color:var(--muted2) }
+
+    footer{margin-top: 28px; color:var(--muted2); font-size:.95em}
   </style>
 </head>
 <body>
-  <h1>🎓 Studium Countdown</h1>
-  <div id="progress-overall"></div>
-  <div id="timer"></div>
-  <div id="semester-info"></div>
+  <div class="wrap">
+    <div class="toolbar">
+      <button id="theme-toggle" class="btn" aria-label="Theme umschalten">🌙 Dark</button>
+    </div>
 
-  <div class="label">📘 Gesamtfortschritt Studium</div>
-  <div class="bar-container">
-    <div id="bar-total" class="bar"></div>
-    <div id="bar-total-label" class="bar-label"></div>
+    <h1>🎓 Studium – Countdown & Fortschritt</h1>
+    <div id="progress-overall"></div>
+    <div id="timer" aria-live="polite"></div>
+    <div id="semester-info"></div>
+
+    <div class="card">
+      <div class="label">📘 Gesamtfortschritt Studium</div>
+      <div class="bar-container" aria-label="Gesamtfortschritt Studium">
+        <div id="bar-total" class="bar"></div>
+        <div id="bar-total-label" class="bar-label"></div>
+      </div>
+
+      <div class="label" style="margin-top:14px">Meilensteine</div>
+      <div id="timeline" class="bar-container timeline" aria-hidden="true"></div>
+      <div id="milestone-legend" class="legend"></div>
+    </div>
+
+    <div class="card">
+      <div class="label">Semester-Fortschritt</div>
+      <div id="semester-bars"></div>
+    </div>
+
+    <div class="card">
+      <div class="label">Mini-Statistiken</div>
+      <div id="mini-stats"></div>
+      <div class="row" id="stats-grid"></div>
+    </div>
+
+    <footer>Stand: <span id="today"></span></footer>
   </div>
 
-  <div id="semester-bars"></div>
-
-  <footer>Stand: <span id="today"></span></footer>
-
   <script>
-    // === STUDIUMSDATEN ===
-    const studyStart = new Date("2024-10-01");
-    const studyEnd = new Date("2027-07-31");
+    // ===== Helper für UTC-Daten (stabil gegen Sommerzeit) =====
+    const U = (y,m,d) => new Date(Date.UTC(y,m,d,0,0,0));
+    const DAY = 24*60*60*1000;
+
+    // ===== Deine Studiendaten (aus deiner Nachricht) =====
+    const studyStart = U(2024,9,1);   // 01.10.2024
+    const studyEnd   = U(2027,6,31);  // 31.07.2027
+
+    // Feste Semestergrenzen: WS 01.10–14.02, SS 14.03–31.07
     const semesters = [
-      { name: "1. Semester (WS 24/25)", start: new Date("2024-10-01"), end: new Date("2025-02-14") },
-      { name: "2. Semester (SS 25)",   start: new Date("2025-03-14"), end: new Date("2025-07-31") },
-      { name: "3. Semester (WS 25/26)", start: new Date("2025-10-01"), end: new Date("2026-02-14") },
-      { name: "4. Semester (SS 26)",   start: new Date("2026-03-14"), end: new Date("2026-07-31") },
-      { name: "5. Semester (WS 26/27)", start: new Date("2026-10-01"), end: new Date("2027-02-14") },
-      { name: "6. Semester (SS 27)",   start: new Date("2027-03-14"), end: new Date("2027-07-31") },
+      { name: "1. Semester (WS 24/25)", start: U(2024,9,1),  end: U(2025,1,14) },
+      { name: "2. Semester (SS 25)",    start: U(2025,2,14), end: U(2025,6,31) },
+      { name: "3. Semester (WS 25/26)", start: U(2025,9,1),  end: U(2026,1,14) },
+      { name: "4. Semester (SS 26)",    start: U(2026,2,14), end: U(2026,6,31) },
+      { name: "5. Semester (WS 26/27)", start: U(2026,9,1),  end: U(2027,1,14) },
+      { name: "6. Semester (SS 27)",    start: U(2027,2,14), end: U(2027,6,31) },
     ];
 
-    const container = document.getElementById("semester-bars");
+    // ===== Meilensteine (editierbar) =====
+    const milestones = [
+      { label: "Klausuren WS 25/26",   date: U(2026,1,3)  },
+      { label: "Projektabgabe SS 26",  date: U(2026,6,10) },
+      { label: "Bachelorarbeit Start", date: U(2027,3,1)  },
+    ];
 
-    // HTML-Struktur für Semesterbalken erzeugen
+    // ===== UI-Bausteine erzeugen =====
+    const barsContainer = document.getElementById("semester-bars");
     semesters.forEach((sem, i) => {
       const label = document.createElement("div");
       label.className = "label";
       label.textContent = `📗 ${sem.name}`;
-
-      const barWrap = document.createElement("div");
-      barWrap.className = "bar-container";
-
+      const wrap = document.createElement("div");
+      wrap.className = "bar-container";
+      wrap.setAttribute("aria-label", `${sem.name} Fortschritt`);
       const bar = document.createElement("div");
-      bar.id = `bar-sem-${i}`;
-      bar.className = "bar";
-
+      bar.className = "bar"; bar.id = `bar-sem-${i}`;
       const text = document.createElement("div");
-      text.id = `bar-label-${i}`;
-      text.className = "bar-label";
-
-      barWrap.appendChild(bar);
-      barWrap.appendChild(text);
-      container.appendChild(label);
-      container.appendChild(barWrap);
+      text.className = "bar-label"; text.id = `bar-label-${i}`;
+      wrap.appendChild(bar); wrap.appendChild(text);
+      barsContainer.appendChild(label); barsContainer.appendChild(wrap);
     });
 
-    function updateCountdown() {
-      const now = new Date();
-
-      // Countdown
-      const diff = studyEnd - now;
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-      const minutes = Math.floor((diff / (1000 * 60)) % 60);
-      const seconds = Math.floor((diff / 1000) % 60);
-      document.getElementById("timer").textContent =
-        `${days} Tage, ${hours} Std, ${minutes} Min, ${seconds} Sek`;
-
-      // Gesamtfortschritt Studium
-      const totalProgress = ((now - studyStart) / (studyEnd - studyStart)) * 100;
-      const totalPercent = Math.min(Math.max(totalProgress, 0), 100).toFixed(1);
-      const totalBar = document.getElementById("bar-total");
-      const totalLabel = document.getElementById("bar-total-label");
-      totalBar.style.width = totalPercent + "%";
-      totalLabel.textContent = `${totalPercent}%`;
-
-      document.getElementById("progress-overall").textContent =
-        `Bereits ${totalPercent}% des Studiums geschafft`;
-
-      // Semesterfortschritte
-      let currentSemesterIndex = -1;
-      semesters.forEach((sem, i) => {
-        const bar = document.getElementById(`bar-sem-${i}`);
-        const text = document.getElementById(`bar-label-${i}`);
-        let progress = 0;
-
-        if (now >= sem.end) {
-          progress = 100;
-          bar.style.background = "linear-gradient(90deg, #00cc66, #00ff99)";
-        } else if (now >= sem.start && now <= sem.end) {
-          currentSemesterIndex = i;
-          progress = ((now - sem.start) / (sem.end - sem.start)) * 100;
-          bar.style.background = "linear-gradient(90deg, #0099ff, #00ffff)";
-        } else {
-          progress = 0;
-          bar.style.background = "#333";
-        }
-
-        bar.style.width = progress.toFixed(1) + "%";
-        text.textContent = `${progress.toFixed(1)}%`;
+    // ===== Timeline einmalig aufbauen =====
+    (function buildTimeline(){
+      const tl = document.getElementById("timeline");
+      const legend = document.getElementById("milestone-legend");
+      milestones.forEach(m => {
+        const p = Math.min(100, Math.max(0, ((m.date - studyStart)/(studyEnd - studyStart))*100));
+        const dot = document.createElement("div");
+        dot.className = "dot";
+        dot.title = `${m.label} – ${m.date.toLocaleDateString("de-DE")}`;
+        dot.style.left = `calc(${p}% - 4px)`;
+        tl.appendChild(dot);
       });
+      legend.textContent = milestones.map(m => `${m.label} (${m.date.toLocaleDateString("de-DE")})`).join(" • ");
+    })();
 
-      // Aktuelles Semester anzeigen
-      const semText =
-        currentSemesterIndex >= 0
-          ? `${semesters[currentSemesterIndex].name.replace("📗 ", "")}`
-          : now < semesters[0].start
-          ? "Noch vor Studienbeginn"
-          : "Studium abgeschlossen 🎉";
-      document.getElementById("semester-info").textContent = semText;
+    // ===== Theme Toggle (persistiert) =====
+    const themeBtn = document.getElementById("theme-toggle");
+    function applyTheme(){
+      const isLight = localStorage.getItem("theme")==="light";
+      document.body.classList.toggle("light", isLight);
+      themeBtn.textContent = isLight ? "☀️ Light" : "🌙 Dark";
+    }
+    themeBtn.onclick = ()=>{
+      const isLight = document.body.classList.toggle("light");
+      localStorage.setItem("theme", isLight ? "light" : "dark");
+      applyTheme();
+    };
+    applyTheme();
 
-      document.getElementById("today").textContent = now.toLocaleDateString("de-DE");
-      requestAnimationFrame(updateCountdown);
+    // ===== Stats-Kacheln =====
+    function setStatsGrid(items){
+      const grid = document.getElementById("stats-grid");
+      grid.innerHTML = "";
+      items.forEach(([title,val])=>{
+        const card = document.createElement("div");
+        card.className = "card";
+        card.style.margin = 0;
+        card.innerHTML = `<div class="label" style="margin-top:0">${title}</div><div style="font-size:1.2em;font-variant-numeric:tabular-nums">${val}</div>`;
+        grid.appendChild(card);
+      });
     }
 
-    updateCountdown();
+    // ===== Haupt-Update (1x pro Sekunde) =====
+    const $ = sel => document.getElementById(sel);
+    function clamp01(x){ return Math.min(1, Math.max(0, x)); }
+
+    function findCurrentSemester(now){
+      for (let i=0;i<semesters.length;i++){
+        if (now >= semesters[i].start && now <= semesters[i].end) return i;
+      }
+      return -1;
+    }
+    function nextRelevantSemesterEnd(now){
+      // Ende des akt. Semesters; falls keins, dann Ende des nächsten kommenden Semesters, sonst Studienende
+      const idx = findCurrentSemester(now);
+      if (idx >= 0) return semesters[idx].end;
+      for (const s of semesters) if (now < s.end) return s.end;
+      return studyEnd;
+    }
+
+    function fmtPercent(x){ return (x*100).toFixed(1) + "%"; }
+
+    function update(){
+      const now = new Date(); // Lokalzeit – Anzeige; Berechnung oben in UTC-Daten stabil.
+      const nowUTC = U(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()); // für Tagesdifferenzen
+
+      // Countdown
+      const diffMs = studyEnd - now;
+      const days = Math.max(0, Math.floor(diffMs / DAY));
+      const hours = Math.max(0, Math.floor((diffMs % DAY) / (60*60*1000)));
+      const minutes = Math.max(0, Math.floor((diffMs % (60*60*1000)) / (60*1000)));
+      const seconds = Math.max(0, Math.floor((diffMs % (60*1000)) / 1000));
+      $("timer").textContent = `${days} Tage, ${hours} Std, ${minutes} Min, ${seconds} Sek`;
+
+      // Gesamtfortschritt (Studium)
+      const overall = clamp01((now - studyStart) / (studyEnd - studyStart));
+      $("progress-overall").textContent = `Bereits ${(overall*100).toFixed(1)}% des Studiums geschafft`;
+      $("bar-total").style.width = fmtPercent(overall);
+      $("bar-total-label").textContent = (overall*100).toFixed(1) + "%";
+
+      // Semester-Balken
+      let currentSemesterIndex = -1;
+      semesters.forEach((s, i)=>{
+        const bar = $("bar-sem-"+i);
+        const lab = $("bar-label-"+i);
+        let p = 0;
+        if (now >= s.end){ p = 1; bar.style.background = `linear-gradient(90deg, var(--barDone1), var(--barDone2))`; }
+        else if (now >= s.start && now <= s.end){ currentSemesterIndex = i; p = clamp01((now - s.start)/(s.end - s.start)); bar.style.background = `linear-gradient(90deg, var(--barNow1), var(--barNow2))`; }
+        else { p = 0; bar.style.background = `var(--barIdle)`; }
+        bar.style.width = fmtPercent(p);
+        lab.textContent = (p*100).toFixed(1) + "%";
+      });
+
+      // Semester-Info
+      const semText =
+        currentSemesterIndex >= 0 ? semesters[currentSemesterIndex].name
+        : (now < semesters[0].start ? "Noch vor Studienbeginn"
+        : (now > semesters.at(-1).end ? "Studium abgeschlossen 🎉" : "Vorlesungsfreie Zeit / zwischen Semestern"));
+      $("semester-info").textContent = semText;
+
+      // Mini-Stats
+      const semEnd = nextRelevantSemesterEnd(now);
+      const daysToSemEnd = Math.max(0, Math.ceil((semEnd - nowUTC)/DAY));
+      const daysToStudyEnd = Math.max(0, Math.ceil((studyEnd - nowUTC)/DAY));
+      $("mini-stats").textContent = `Noch ${daysToSemEnd} Tage bis Semesterende • ${daysToStudyEnd} Tage bis Studienende`;
+
+      // Extra-Kacheln
+      const nextMilestone = milestones.filter(m=>m.date >= nowUTC).sort((a,b)=>a.date-b.date)[0];
+      const msText = nextMilestone ? `${nextMilestone.label} in ${Math.max(0, Math.ceil((nextMilestone.date - nowUTC)/DAY))} Tagen` : "Keine kommenden Meilensteine";
+      setStatsGrid([
+        ["Aktuelles Segment", semText],
+        ["Nächster Meilenstein", msText]
+      ]);
+
+      // Footer Datum
+      $("today").textContent = now.toLocaleDateString("de-DE");
+    }
+    update();
+    setInterval(update, 1000);
+
+    // ===== Single-File PWA: Manifest & Service Worker on-the-fly =====
+    // Manifest als Data-URL verlinken:
+    (function attachManifest(){
+      const manifest = {
+        "name":"Studium Countdown",
+        "short_name":"Studium",
+        "start_url":".",
+        "display":"standalone",
+        "background_color":"#0d0e10",
+        "theme_color":"#0d0e10",
+        "icons":[]
+      };
+      const link = document.createElement('link');
+      const json = encodeURIComponent(JSON.stringify(manifest));
+      link.setAttribute('rel','manifest');
+      link.setAttribute('href', 'data:application/manifest+json,'+ json);
+      document.head.appendChild(link);
+    })();
+
+    // Service Worker per Blob registrieren (damit alles in 1 Datei bleibt)
+    if ('serviceWorker' in navigator) {
+      const swCode = `
+        self.addEventListener('install', e => self.skipWaiting());
+        self.addEventListener('activate', e => self.clients.claim());
+        // Minimaler Passthrough – hier könntest du Cache-Strategien ergänzen
+        self.addEventListener('fetch', e => {});
+      `;
+      const blob = new Blob([swCode], {type:'text/javascript'});
+      const swUrl = URL.createObjectURL(blob);
+      navigator.serviceWorker.register(swUrl).catch(()=>{});
+    }
   </script>
 </body>
 </html>
